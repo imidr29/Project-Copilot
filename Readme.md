@@ -2,9 +2,9 @@
 
 > **Note:** This is a template. Please edit all sections marked with `<...>` and fill in your project's specific details before submission.
 
-**Team Name:** `<Insert Team Name>`
+**Team Name:** Wingardium RavaDosa
 
-**Problem Statement:** `<Briefly State the Problem Statement Title/ID>`
+**Problem Statement:** AI Powered Operations Copilot for Mining and Infrastructure
 
 ---
 
