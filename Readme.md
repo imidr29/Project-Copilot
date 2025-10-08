@@ -100,8 +100,8 @@ Here are the key functionalities of our project:
 
 List the primary technologies, frameworks, and tools used to build your project.
 
-* **Frontend:** `(e.g., React, Angular, Vue.js, Flutter)`
-* **Backend:** `(e.g., Node.js, Django, Flask, Express.js)`
-* **Database:** `(e.g., MongoDB, PostgreSQL, Firebase)`
-* **Machine Learning:** `(e.g., TensorFlow, PyTorch, scikit-learn)`
-* **Deployment:** `(e.g., Docker, Vercel, AWS, Google Cloud)`
+* **Frontend:** `(Angular, Flutter)`
+* **Backend:** `(FastAPI)`
+* **Database:** `(MySQL)`
+* **Machine Learning:** `(OpenAI api keys)`
+* **Deployment:** `(Docker)`
