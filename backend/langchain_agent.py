@@ -12,6 +12,7 @@ from database import Database
 from pinecone import Pinecone
 from google import genai
 from google.genai import types
+from config_loader import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,17 +25,17 @@ class LangChainSQLAgent:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0,
-            api_key=os.getenv("GOOGLE_API_KEY")
+            api_key=config.get_google_api_key()
         )
         
         try:
-            self.genai_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+            self.genai_client = genai.Client(api_key=config.get_google_api_key())
         except Exception as e:
             logger.warning(f"Gemini embeddings failed: {e}")
             self.genai_client = None
         
         try:
-            pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+            pc = Pinecone(api_key=config.get_pinecone_api_key())
             self.index = pc.Index("oee-semantic")
         except Exception as e:
             logger.warning(f"Pinecone failed: {e}")

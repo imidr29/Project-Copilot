@@ -5,20 +5,13 @@ from typing import List, Dict, Any, Optional, Tuple
 import os
 from dotenv import load_dotenv
 from contextlib import contextmanager
+from config_loader import config
 
 load_dotenv()
 
 class Database:
     def __init__(self):
-        self.config = {
-            'host': os.getenv('DB_HOST', '127.0.0.1'),
-            'user': os.getenv('DB_USER', 'root'),
-            'password': os.getenv('DB_PASSWORD', 'rootpass'),
-            'database': os.getenv('DB_NAME', 'MiningandFactoryData'),
-            'port': int(os.getenv('DB_PORT', 3307)),
-            'charset': 'utf8mb4',
-            'cursorclass': pymysql.cursors.DictCursor
-        }
+        self.config = config.get_database_config()
 
     @contextmanager
     def get_connection(self):
