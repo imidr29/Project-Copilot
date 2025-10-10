@@ -182,6 +182,219 @@
             flex-direction: column;
             background: white;
         }
+
+        /* Token Counter Styles */
+        .token-counter-section {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 20px;
+            min-height: 100px;
+        }
+
+        .token-counter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .token-counter-header h3 {
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .minimize-btn {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            height: 24px;
+            width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .minimize-btn:hover {
+            background: #cbd5e0;
+            color: #2d3748;
+        }
+
+        .token-counter-section.minimized {
+            width: 60px;
+            transition: width 0.3s ease;
+        }
+
+        .token-counter-section.minimized .token-counter-content {
+            display: none;
+        }
+
+        .token-counter-section.minimized .token-input-section {
+            display: none;
+        }
+
+        .token-counter-section.minimized .header-left h3 {
+            display: none;
+        }
+
+        .token-counter-section.minimized .minimize-btn {
+            transform: rotate(180deg);
+            margin: 0 auto;
+        }
+
+        .token-counter-section.minimized .header-left {
+            justify-content: center;
+        }
+
+        .token-input-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .token-input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .set-token-btn, .clear-token-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .set-token-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .set-token-btn:hover {
+            background: #5a67d8;
+        }
+
+        .clear-token-btn {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .clear-token-btn:hover {
+            background: #c53030;
+        }
+
+        .token-counter-content {
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .no-token-message p {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .debug-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .debug-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .debug-info strong {
+            color: #2d3748;
+        }
+
+        .usage-stats {
+            display: none;
+            text-align: left;
+        }
+
+        .usage-stats.show {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: #ffc107;
+        }
+
+        .progress-fill.danger {
+            background: #dc3545;
+        }
         
         /* Home Page Styles */
         .home-page {
@@ -1042,6 +1255,31 @@
         </div>
     </div>
 
+    <!-- Token Counter Section -->
+    <div class="token-counter-section" id="tokenCounterSection">
+        <div class="token-counter-header">
+            <div class="header-left">
+                <h3>🔐 Token Usage</h3>
+                <button id="minimizeBtn" onclick="toggleTokenCounter()" class="minimize-btn" title="Minimize">−</button>
+            </div>
+            <div class="token-input-section">
+                <input type="password" id="tokenInput" placeholder="Enter your API token" class="token-input">
+                <button id="setTokenBtn" class="set-token-btn">Set Token</button>
+                <button id="clearTokenBtn" class="clear-token-btn" style="display: none;">Clear</button>
+            </div>
+        </div>
+        <div class="token-counter-content" id="tokenCounterContent">
+            <div class="no-token-message">
+                <p>Enter your API token above to see usage statistics</p>
+                <div class="debug-info">
+                    <p><strong>Debug Info:</strong></p>
+                    <p>Token Status: <span id="tokenStatus">Not Set</span></p>
+                    <p>Backend: <span id="backendStatus">Checking...</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="main-content">
         <!-- Home Page -->
@@ -1189,6 +1427,231 @@
     <script>
         const API_BASE = 'http://localhost:8000';
         
+        // Token Counter Variables
+        let currentToken = localStorage.getItem('api_token');
+        let isAdmin = false;
+        
+        // Token Counter Functions
+        function initializeTokenCounter() {
+            console.log('🔐 Initializing Token Counter...');
+            
+            const tokenInput = document.getElementById('tokenInput');
+            const setTokenBtn = document.getElementById('setTokenBtn');
+            const clearTokenBtn = document.getElementById('clearTokenBtn');
+            const tokenStatus = document.getElementById('tokenStatus');
+            const backendStatus = document.getElementById('backendStatus');
+            
+            // Load existing token
+            if (currentToken) {
+                tokenInput.value = currentToken;
+                updateTokenDisplay();
+                loadUsageStats();
+            }
+            
+            // Event listeners
+            setTokenBtn.addEventListener('click', setToken);
+            clearTokenBtn.addEventListener('click', clearToken);
+            tokenInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    setToken();
+                }
+            });
+            
+            // Check backend status
+            checkBackendStatus();
+            
+            console.log('✅ Token Counter initialized');
+        }
+        
+        function setToken() {
+            const tokenInput = document.getElementById('tokenInput');
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                alert('Please enter a token');
+                return;
+            }
+            
+            console.log('🔑 Setting token:', token.substring(0, 8) + '...');
+            currentToken = token;
+            localStorage.setItem('api_token', token);
+            isAdmin = token.length > 30; // Simple admin check
+            
+            updateTokenDisplay();
+            loadUsageStats();
+        }
+        
+        function clearToken() {
+            console.log('🗑️ Clearing token');
+            currentToken = null;
+            localStorage.removeItem('api_token');
+            isAdmin = false;
+            
+            document.getElementById('tokenInput').value = '';
+            updateTokenDisplay();
+            showNoTokenMessage();
+        }
+
+        function toggleTokenCounter() {
+            const tokenCounterSection = document.getElementById('tokenCounterSection');
+            const minimizeBtn = document.getElementById('minimizeBtn');
+            
+            if (tokenCounterSection.classList.contains('minimized')) {
+                // Maximize
+                tokenCounterSection.classList.remove('minimized');
+                minimizeBtn.textContent = '−';
+                minimizeBtn.title = 'Minimize';
+                console.log('📈 Token counter maximized');
+            } else {
+                // Minimize horizontally
+                tokenCounterSection.classList.add('minimized');
+                minimizeBtn.textContent = '+';
+                minimizeBtn.title = 'Maximize';
+                console.log('📉 Token counter minimized horizontally');
+            }
+        }
+        
+        function updateTokenDisplay() {
+            const tokenInput = document.getElementById('tokenInput');
+            const setTokenBtn = document.getElementById('setTokenBtn');
+            const clearTokenBtn = document.getElementById('clearTokenBtn');
+            const tokenStatus = document.getElementById('tokenStatus');
+            
+            if (currentToken) {
+                tokenInput.style.display = 'none';
+                setTokenBtn.style.display = 'none';
+                clearTokenBtn.style.display = 'inline-block';
+                tokenStatus.textContent = 'Set (' + currentToken.substring(0, 8) + '...)';
+                tokenStatus.style.color = '#28a745';
+            } else {
+                tokenInput.style.display = 'inline-block';
+                setTokenBtn.style.display = 'inline-block';
+                clearTokenBtn.style.display = 'none';
+                tokenStatus.textContent = 'Not Set';
+                tokenStatus.style.color = '#dc3545';
+            }
+        }
+        
+        async function checkBackendStatus() {
+            const backendStatus = document.getElementById('backendStatus');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    backendStatus.textContent = 'Connected ✅';
+                    backendStatus.style.color = '#28a745';
+                } else {
+                    backendStatus.textContent = 'Error ❌';
+                    backendStatus.style.color = '#dc3545';
+                }
+            } catch (error) {
+                backendStatus.textContent = 'Offline ❌';
+                backendStatus.style.color = '#dc3545';
+            }
+        }
+        
+        async function loadUsageStats() {
+            if (!currentToken) {
+                showNoTokenMessage();
+                return;
+            }
+            
+            console.log('📊 Loading usage stats...');
+            const tokenCounterContent = document.getElementById('tokenCounterContent');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/usage/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayUsageStats(stats);
+                } else if (response.status === 401) {
+                    showError('Invalid token');
+                } else {
+                    showError('Failed to load stats');
+                }
+            } catch (error) {
+                console.error('Error loading usage stats:', error);
+                showError('Connection error');
+            }
+        }
+        
+        function displayUsageStats(stats) {
+            const tokenCounterContent = document.getElementById('tokenCounterContent');
+            const usagePercentage = Math.min(100, (stats.daily_requests / 100) * 100);
+            const progressColor = usagePercentage >= 90 ? 'danger' : usagePercentage >= 70 ? 'warning' : '';
+            
+            tokenCounterContent.innerHTML = `
+                <div class="usage-stats show">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">User</div>
+                            <div class="stat-value">${stats.user_id}</div>
+                            <div style="font-size: 0.8em; color: #007bff;">${stats.role}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Requests</div>
+                            <div class="stat-value">${stats.total_requests}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Daily Requests</div>
+                            <div class="stat-value">${stats.daily_requests}</div>
+                            <div style="font-size: 0.8em; color: #6c757d;">Limit: 100/hour</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Tokens</div>
+                            <div class="stat-value">${stats.total_tokens}</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Daily Usage: ${stats.daily_requests}/100</span>
+                            <span style="color: #6c757d;">(${100 - stats.daily_requests} remaining)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${progressColor}" style="width: ${usagePercentage}%"></div>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <button onclick="loadUsageStats()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔄 Refresh Stats
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showNoTokenMessage() {
+            const tokenCounterContent = document.getElementById('tokenCounterContent');
+            tokenCounterContent.innerHTML = `
+                <div class="no-token-message">
+                    <p>Enter your API token above to see usage statistics</p>
+                    <div class="debug-info">
+                        <p><strong>Debug Info:</strong></p>
+                        <p>Token Status: <span id="tokenStatus">Not Set</span></p>
+                        <p>Backend: <span id="backendStatus">Checking...</span></p>
+                    </div>
+                </div>
+            `;
+            checkBackendStatus();
+        }
+        
+        function showError(message) {
+            const tokenCounterContent = document.getElementById('tokenCounterContent');
+            tokenCounterContent.innerHTML = `
+                <div class="no-token-message">
+                    <p style="color: #dc3545;">❌ ${message}</p>
+                    <button onclick="loadUsageStats()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                        🔄 Retry
+                    </button>
+                </div>
+            `;
+        }
+        
         async function searchQuery() {
             const queryInput = document.getElementById('queryInput');
             const searchBtn = document.getElementById('searchBtn');
@@ -1211,12 +1674,20 @@
             try {
                 const startTime = Date.now();
                 
+                // Prepare headers
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                };
+                
+                // Add token if available
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+                
                 const response = await fetch(`${API_BASE}/api/query`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         query: query,
                         conversation_history: []
@@ -1235,6 +1706,13 @@
                 // Show success
                 status.textContent = `Query completed in ${responseTime}ms`;
                 status.className = 'status success';
+                
+                // Refresh token counter if token is set
+                if (currentToken) {
+                    setTimeout(() => {
+                        loadUsageStats();
+                    }, 500); // Small delay to ensure backend has updated
+                }
                 
                 // Save to current chat first
                 addMessageToCurrentChat(query, data);
@@ -1364,7 +1842,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing system...');
             
-            // Initialize chat system first
+            // Initialize token counter first
+            initializeTokenCounter();
+            
+            // Initialize chat system
             initializeChatSystem();
             
             // Test backend connection

@@ -34,22 +34,24 @@ class ConfigLoader:
         return os.getenv(env_key, default)
     
     def get_google_api_key(self) -> Optional[str]:
-        """Get Google API key from config or environment"""
-        return self.get("google_api_key") or os.getenv("GOOGLE_API_KEY")
+        """Get Google API key from environment (prioritized) or config"""
+        # Prioritize environment variable for security
+        return os.getenv("GOOGLE_API_KEY") or self.get("google_api_key")
     
     def get_pinecone_api_key(self) -> Optional[str]:
-        """Get Pinecone API key from config or environment"""
-        return self.get("pinecone_api_key") or os.getenv("PINECONE_API_KEY")
+        """Get Pinecone API key from environment (prioritized) or config"""
+        # Prioritize environment variable for security
+        return os.getenv("PINECONE_API_KEY") or self.get("pinecone_api_key")
     
     def get_database_config(self) -> Dict[str, Any]:
-        """Get database configuration"""
+        """Get database configuration - prioritizes environment variables for security"""
         db_config = self.get("database", {})
         return {
-            'host': db_config.get('host', os.getenv('DB_HOST', '127.0.0.1')),
-            'user': db_config.get('user', os.getenv('DB_USER', 'root')),
-            'password': db_config.get('password', os.getenv('DB_PASSWORD', 'rootpass')),
-            'database': db_config.get('database', os.getenv('DB_NAME', 'MiningAndFactoryData')),
-            'port': int(db_config.get('port', os.getenv('DB_PORT', 3307))),
+            'host': os.getenv('DB_HOST') or db_config.get('host', '127.0.0.1'),
+            'user': os.getenv('DB_USER') or db_config.get('user', 'root'),
+            'password': os.getenv('DB_PASSWORD') or db_config.get('password', 'rootpass'),
+            'database': os.getenv('DB_NAME') or db_config.get('database', 'MiningAndFactoryData'),
+            'port': int(os.getenv('DB_PORT') or db_config.get('port', 3307)),
             'charset': 'utf8mb4',
             'cursorclass': pymysql.cursors.DictCursor
         }

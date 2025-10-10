@@ -1,0 +1,255 @@
+.token-counter {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h3 {
+      margin: 0;
+      color: #333;
+      font-size: 1.2em;
+    }
+
+    .refresh-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+
+      &:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      &:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+    margin-bottom: 20px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+  }
+
+  .stats-container {
+    .user-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+
+      .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        text-align: center;
+
+        .stat-label {
+          font-size: 0.9em;
+          color: #6c757d;
+          margin-bottom: 5px;
+        }
+
+        .stat-value {
+          font-size: 1.5em;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 5px;
+        }
+
+        .stat-role {
+          font-size: 0.8em;
+          color: #007bff;
+          text-transform: uppercase;
+          font-weight: 500;
+        }
+
+        .stat-sub {
+          font-size: 0.8em;
+          color: #6c757d;
+        }
+      }
+    }
+
+    .usage-progress {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-weight: 500;
+
+        .remaining {
+          color: #6c757d;
+          font-weight: normal;
+        }
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          transition: width 0.3s ease;
+
+          &.progress-success {
+            background: #28a745;
+          }
+
+          &.progress-warning {
+            background: #ffc107;
+          }
+
+          &.progress-danger {
+            background: #dc3545;
+          }
+        }
+      }
+    }
+
+    .tokens-section {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      h4 {
+        margin: 0 0 15px 0;
+        color: #333;
+      }
+
+      .tokens-list {
+        .token-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px;
+          border: 1px solid #e9ecef;
+          border-radius: 4px;
+          margin-bottom: 10px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .token-info {
+            .token-id {
+              font-family: monospace;
+              font-weight: bold;
+              color: #333;
+            }
+
+            .token-role {
+              font-size: 0.8em;
+              color: #007bff;
+              text-transform: uppercase;
+            }
+          }
+
+          .token-stats {
+            text-align: right;
+
+            .token-requests {
+              font-weight: bold;
+              color: #333;
+            }
+
+            .token-dates {
+              font-size: 0.8em;
+              color: #6c757d;
+
+              div {
+                margin: 2px 0;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .system-stats {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+
+    h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+
+      .system-card {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+
+        .system-label {
+          font-size: 0.8em;
+          color: #6c757d;
+          margin-bottom: 5px;
+        }
+
+        .system-value {
+          font-size: 1.2em;
+          font-weight: bold;
+          color: #333;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .token-counter {
+    .stats-container {
+      .user-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .system-stats {
+      .system-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  }
+}

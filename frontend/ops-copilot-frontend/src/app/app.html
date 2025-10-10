@@ -1,6 +1,54 @@
 <div class="app-container">
+  <!-- Header with Token Management -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ title }}</h1>
+      <div class="token-section">
+        <div *ngIf="!apiToken" class="token-input">
+          <input 
+            type="password" 
+            placeholder="Enter your API token" 
+            #tokenInput
+            (keyup.enter)="setToken(tokenInput.value)"
+            class="token-field">
+          <button 
+            (click)="setToken(tokenInput.value)"
+            class="set-token-btn">
+            Set Token
+          </button>
+        </div>
+        <div *ngIf="apiToken" class="token-display">
+          <span class="token-info">Token: {{ apiToken.substring(0, 8) }}...</span>
+          <button (click)="clearToken()" class="clear-token-btn">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Counter (always visible for debugging) -->
+  <div class="token-counter-section">
+    <div *ngIf="!apiToken" class="no-token-message">
+      <h3>🔐 Token Counter</h3>
+      <p>Enter your API token above to see usage statistics</p>
+      <div class="debug-info">
+        <p><strong>Debug Info:</strong></p>
+        <p>Token Status: {{ apiToken ? 'Set' : 'Not Set' }}</p>
+        <p>Admin Status: {{ isAdmin ? 'Yes' : 'No' }}</p>
+      </div>
+    </div>
+    <div *ngIf="apiToken">
+      <app-token-counter 
+        [apiToken]="apiToken" 
+        [showSystemStats]="isAdmin">
+      </app-token-counter>
+      <div class="token-counter-fallback" *ngIf="!apiToken">
+        <p>Token counter component failed to load</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Chat Interface -->
   <div class="main-content">
-    <app-chat></app-chat>
+    <app-chat [apiToken]="apiToken"></app-chat>
   </div>
 </div>

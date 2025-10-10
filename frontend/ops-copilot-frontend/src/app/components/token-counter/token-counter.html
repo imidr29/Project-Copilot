@@ -1,0 +1,101 @@
+<div class="token-counter">
+  <div class="header">
+    <h3>🔐 Token Usage</h3>
+    <button class="refresh-btn" (click)="refreshStats()" [disabled]="loading">
+      <span *ngIf="loading">⏳</span>
+      <span *ngIf="!loading">🔄</span>
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error">
+    ❌ {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    ⏳ Loading usage statistics...
+  </div>
+
+  <div *ngIf="usageStats && !loading" class="stats-container">
+    <!-- User Stats -->
+    <div class="user-stats">
+      <div class="stat-card">
+        <div class="stat-label">User</div>
+        <div class="stat-value">{{ usageStats.user_id }}</div>
+        <div class="stat-role">{{ usageStats.role }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Requests</div>
+        <div class="stat-value">{{ usageStats.total_requests }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Daily Requests</div>
+        <div class="stat-value">{{ usageStats.daily_requests }}</div>
+        <div class="stat-sub">Limit: 100/hour</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Tokens</div>
+        <div class="stat-value">{{ usageStats.total_tokens }}</div>
+      </div>
+    </div>
+
+    <!-- Usage Progress Bar -->
+    <div class="usage-progress">
+      <div class="progress-label">
+        Daily Usage: {{ usageStats.daily_requests }}/100
+        <span class="remaining">({{ getRemainingRequests() }} remaining)</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" 
+             [style.width.%]="getUsagePercentage()"
+             [class]="'progress-' + getUsageColor()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Token List -->
+    <div class="tokens-section">
+      <h4>Your Tokens</h4>
+      <div class="tokens-list">
+        <div *ngFor="let token of usageStats.tokens" class="token-item">
+          <div class="token-info">
+            <div class="token-id">{{ token.token }}</div>
+            <div class="token-role">{{ token.role }}</div>
+          </div>
+          <div class="token-stats">
+            <div class="token-requests">{{ token.requests }} requests</div>
+            <div class="token-dates">
+              <div>Created: {{ formatDate(token.created_at) }}</div>
+              <div>Expires: {{ formatDate(token.expires_at) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Stats (Admin Only) -->
+  <div *ngIf="systemStats && showSystemStats" class="system-stats">
+    <h4>📊 System Statistics</h4>
+    <div class="system-grid">
+      <div class="system-card">
+        <div class="system-label">Total Users</div>
+        <div class="system-value">{{ systemStats.total_users }}</div>
+      </div>
+      <div class="system-card">
+        <div class="system-label">Total Requests</div>
+        <div class="system-value">{{ systemStats.total_requests }}</div>
+      </div>
+      <div class="system-card">
+        <div class="system-label">Active Tokens</div>
+        <div class="system-value">{{ systemStats.active_tokens }}</div>
+      </div>
+      <div class="system-card">
+        <div class="system-label">Daily Requests</div>
+        <div class="system-value">{{ systemStats.daily_requests }}</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import os
@@ -14,6 +16,7 @@ from database import Database
 from langchain_agent import LangChainSQLAgent
 from chart_agent import ChartAgent
 from csv_processor import CSVProcessor
+from token_guard import token_guard, require_token
 
 load_dotenv()
 
@@ -45,12 +48,37 @@ async def global_exception_handler(request: Request, exc: Exception):
 # CORS for frontend (Angular on 4200 and Simple frontend on 3000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[
+        "http://localhost:3000",  # Simple frontend
+        "http://localhost:4200",  # Angular frontend
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:4200"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    expose_headers=["X-Rate-Limit-Remaining", "X-Rate-Limit-Reset"]
 )
+
+# Security middleware
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
+)
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    
+    return response
 
 # Initialize services
 db = Database()
@@ -58,10 +86,51 @@ sql_agent = LangChainSQLAgent(db)  # Google Gemini agent
 chart_agent = ChartAgent()
 csv_processor = CSVProcessor(db)
 
+# Security
+security = HTTPBearer(auto_error=False)
+
 # Request/Response models
 class QueryRequest(BaseModel):
     query: str
     conversation_history: Optional[List[Dict[str, str]]] = []
+    api_token: Optional[str] = None
+
+class TokenRequest(BaseModel):
+    user_id: str
+    role: str = "user"
+    permissions: Optional[List[str]] = None
+
+class TokenResponse(BaseModel):
+    token: str
+    expires_at: str
+    user_id: str
+    role: str
+
+# Authentication dependency
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), request: Request = None):
+    """Get current user from token"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Token required")
+    
+    try:
+        endpoint = request.url.path if request else None
+        token_info = token_guard.validate_token(credentials.credentials, endpoint)
+        return token_info
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
+# Optional authentication (for endpoints that work with or without auth)
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security), request: Request = None):
+    """Get current user from token (optional)"""
+    if not credentials:
+        return None
+    
+    try:
+        endpoint = request.url.path if request else None
+        token_info = token_guard.validate_token(credentials.credentials, endpoint)
+        return token_info
+    except ValueError:
+        return None
 
 @app.get("/")
 async def root():
@@ -86,8 +155,14 @@ async def health_check():
         raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
 
 @app.post("/api/query")
-async def process_query(request: QueryRequest):
+async def process_query(request: QueryRequest, current_user: dict = Depends(get_current_user_optional)):
     try:
+        # Log authentication status
+        if current_user:
+            logger.info(f"Authenticated request from user: {current_user['user_id']} (role: {current_user['role']})")
+        else:
+            logger.info("Unauthenticated request")
+        
         result = await sql_agent.process_query(
             query=request.query,
             conversation_history=request.conversation_history
@@ -150,6 +225,169 @@ async def get_query_suggestions():
             "Calculate approximate MTTR for last week"
         ]
     }
+
+# Token management endpoints
+@app.post("/api/tokens", response_model=TokenResponse)
+async def create_token(request: TokenRequest, current_user: dict = Depends(get_current_user)):
+    """Create a new API token (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    token = token_guard.generate_token(
+        user_id=request.user_id,
+        role=request.role,
+        permissions=request.permissions
+    )
+    
+    token_info = token_guard.get_token_info(token)
+    
+    return TokenResponse(
+        token=token,
+        expires_at=token_info['expires_at'],
+        user_id=token_info['user_id'],
+        role=token_info['role']
+    )
+
+@app.get("/api/tokens")
+async def list_tokens(current_user: dict = Depends(get_current_user)):
+    """List active tokens (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    tokens = token_guard.list_active_tokens()
+    return {"tokens": tokens}
+
+@app.delete("/api/tokens/{token_id}")
+async def revoke_token(token_id: str, current_user: dict = Depends(get_current_user)):
+    """Revoke a token (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    success = token_guard.revoke_token(token_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Token not found")
+    
+    return {"message": "Token revoked successfully"}
+
+@app.post("/api/tokens/cleanup")
+async def cleanup_expired_tokens(current_user: dict = Depends(get_current_user)):
+    """Clean up expired tokens (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    cleaned_count = token_guard.cleanup_expired_tokens()
+    return {"message": f"Cleaned up {cleaned_count} expired tokens"}
+
+# Rate limiting for token endpoints
+from collections import defaultdict
+from time import time
+
+# Simple in-memory rate limiter
+rate_limiter = defaultdict(list)
+RATE_LIMIT_WINDOW = 60  # 1 minute
+RATE_LIMIT_MAX_REQUESTS = 10  # Max 10 requests per minute for token endpoints
+
+def check_rate_limit(client_ip: str) -> bool:
+    """Check if client has exceeded rate limit"""
+    now = time()
+    # Clean old entries
+    rate_limiter[client_ip] = [req_time for req_time in rate_limiter[client_ip] if now - req_time < RATE_LIMIT_WINDOW]
+    
+    # Check if limit exceeded
+    if len(rate_limiter[client_ip]) >= RATE_LIMIT_MAX_REQUESTS:
+        return False
+    
+    # Add current request
+    rate_limiter[client_ip].append(now)
+    return True
+
+@app.get("/api/tokens/default")
+async def get_default_tokens(request: Request):
+    """Get default tokens for testing (no auth required) - Rate limited"""
+    client_ip = request.client.host
+    
+    # Check rate limit
+    if not check_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Max 10 requests per minute.")
+    
+    # Return the actual tokens from the token guard
+    active_tokens = token_guard.list_active_tokens()
+    
+    # Extract tokens by role
+    tokens = {}
+    for token_info in active_tokens:
+        role = token_info.get('role', 'unknown')
+        token = token_info.get('full_token', '')  # Use full token
+        if role in ['admin', 'user', 'readonly']:
+            tokens[role] = token
+    
+    return {
+        "message": "Default tokens retrieved",
+        "tokens": tokens
+    }
+
+# Usage statistics endpoints
+@app.get("/api/usage/stats")
+async def get_usage_stats(current_user: dict = Depends(get_current_user)):
+    """Get usage statistics for the current user"""
+    user_id = current_user['user_id']
+    stats = token_guard.get_usage_stats(user_id)
+    
+    if not stats:
+        return {"message": "No usage statistics found for this user"}
+    
+    return {
+        "user_id": user_id,
+        "role": current_user['role'],
+        "total_requests": stats['total_requests'],
+        "daily_requests": stats['daily_requests'],
+        "total_tokens": stats['total_tokens'],
+        "last_reset": stats['last_reset'],
+        "tokens": stats['tokens']
+    }
+
+@app.get("/api/usage/token/{token_id}")
+async def get_token_usage(token_id: str, current_user: dict = Depends(get_current_user)):
+    """Get usage statistics for a specific token"""
+    # Users can only view their own token usage
+    if current_user['role'] != 'admin':
+        # Check if the token belongs to the current user
+        token_data = token_guard.get_token_info(token_id)
+        if not token_data or token_data['user_id'] != current_user['user_id']:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    usage = token_guard.get_token_usage(token_id)
+    if not usage:
+        raise HTTPException(status_code=404, detail="Token not found")
+    
+    return usage
+
+@app.get("/api/usage/all")
+async def get_all_usage_stats(current_user: dict = Depends(get_current_user)):
+    """Get usage statistics for all users (admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    stats = token_guard.get_all_usage_stats()
+    return {"users": stats}
+
+@app.get("/api/usage/system")
+async def get_system_stats(current_user: dict = Depends(get_current_user)):
+    """Get system-wide usage statistics (admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    stats = token_guard.get_system_stats()
+    return stats
+
+@app.post("/api/usage/reset-daily")
+async def reset_daily_counters(current_user: dict = Depends(get_current_user)):
+    """Reset daily counters for all users (admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin role required")
+    
+    token_guard.reset_daily_counters()
+    return {"message": "Daily counters reset successfully"}
 
 @app.get("/api/schema")
 async def get_schema():
@@ -220,6 +458,12 @@ async def startup_event():
     try:
         db.test_connection()
         logger.info("✅ Database connected")
+        
+        # Create default tokens for testing
+        from token_guard import create_default_tokens
+        default_tokens = create_default_tokens()
+        logger.info("✅ Default tokens created")
+        
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
 

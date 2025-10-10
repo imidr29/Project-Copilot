@@ -18,9 +18,148 @@ html, body {
   flex-direction: column;
 }
 
+.header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    h1 {
+      color: #2d3748;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .token-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .token-input {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+
+        .token-field {
+          padding: 8px 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          background: white;
+          font-size: 14px;
+          min-width: 200px;
+
+          &:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          }
+
+          &::placeholder {
+            color: #a0aec0;
+          }
+        }
+
+        .set-token-btn {
+          padding: 8px 16px;
+          background: #667eea;
+          color: white;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+
+          &:hover {
+            background: #5a67d8;
+          }
+        }
+      }
+
+      .token-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .token-info {
+          font-family: monospace;
+          font-size: 14px;
+          color: #4a5568;
+          background: #f7fafc;
+          padding: 6px 10px;
+          border-radius: 4px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .clear-token-btn {
+          padding: 6px 12px;
+          background: #e53e3e;
+          color: white;
+          border-radius: 4px;
+          font-size: 12px;
+
+          &:hover {
+            background: #c53030;
+          }
+        }
+      }
+    }
+  }
+}
+
+.token-counter-section {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px;
+  min-height: 120px;
+
+  .no-token-message {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #cbd5e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    h3 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    p {
+      color: #4a5568;
+      margin-bottom: 15px;
+    }
+
+    .debug-info {
+      background: #f7fafc;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+      max-width: 300px;
+      margin: 0 auto;
+
+      p {
+        margin: 5px 0;
+        font-size: 14px;
+      }
+
+      strong {
+        color: #2d3748;
+      }
+    }
+  }
+}
+
 .main-content {
   flex: 1;
-  height: 100vh;
   overflow: hidden;
 }
 

@@ -399,29 +399,61 @@ SQL QUERY:"""
         """Check if the query is related to database operations"""
         query_lower = query.lower().strip()
         
-        # List of non-database related patterns
+        # First, check for explicit SQL keywords or database operations
+        sql_keywords = [
+            'select', 'from', 'where', 'insert', 'update', 'delete', 'create', 'drop',
+            'table', 'database', 'row', 'rows', 'column', 'columns', 'query', 'queries',
+            'sql', 'join', 'union', 'group by', 'order by', 'having', 'limit', 'offset',
+            'distinct', 'count', 'sum', 'avg', 'max', 'min', 'as', 'alias'
+        ]
+        
+        # If query contains SQL keywords, it's definitely database-related
+        for keyword in sql_keywords:
+            if keyword in query_lower:
+                logger.info(f"SQL keyword found: {keyword} in query: {query}")
+                return True
+        
+        # Check for table names or database references
+        table_indicators = [
+            'table', 'tables', 'database', 'db', 'schema', 'from', 'into', 'mtcars',
+            'mining_shift_data', 'factory_equipment_logs', 'mining_production_site'
+        ]
+        
+        for indicator in table_indicators:
+            if indicator in query_lower:
+                logger.info(f"Table/database indicator found: {indicator} in query: {query}")
+                return True
+        
+        # List of non-database related patterns (more specific)
         non_db_patterns = [
-            # Abusive/inappropriate content
-            r'\b(fuck|shit|damn|hell|bitch|asshole|stupid|idiot|moron)\b',
-            # Random names/people
-            r'\b(john|jane|mike|sarah|alex|chris|david|emma|james|lisa)\b',
-            # General greetings
-            r'\b(hello|hi|hey|good morning|good afternoon|good evening)\b',
+            # Abusive/inappropriate content (expanded)
+            r'\b(fuck|shit|damn|hell|bitch|asshole|stupid|idiot|moron|kill|die|death|suicide|murder|violence|hate|angry|mad)\b',
+            # Random names/people (but not if they're part of a database query)
+            r'\b(john|jane|mike|sarah|alex|chris|david|emma|james|lisa|brother|sister|mom|dad|mother|father)\b(?!.*from|.*table|.*select)',
+            # General greetings (without database context)
+            r'\b(hello|hi|hey|good morning|good afternoon|good evening|greetings|howdy)\b(?!.*equipment|.*production|.*downtime|.*data|.*analysis|.*from|.*table)',
             # Weather
-            r'\b(weather|rain|sunny|cloudy|temperature|hot|cold)\b',
+            r'\b(weather|rain|sunny|cloudy|temperature|hot|cold|snow|wind|storm)\b(?!.*from|.*table)',
             # Time/date without context
-            r'\b(what time|what date|today|tomorrow|yesterday)\b(?!.*equipment|.*production|.*downtime)',
+            r'\b(what time|what date|today|tomorrow|yesterday)\b(?!.*equipment|.*production|.*downtime|.*from|.*table)',
             # General questions
-            r'\b(how are you|who are you|what are you|tell me about yourself)\b',
-            # Random topics
-            r'\b(cooking|sports|music|movie|book|game|travel|food)\b',
+            r'\b(how are you|who are you|what are you|tell me about yourself|what can you do)\b',
+            # Random topics (but not if they're part of a database query)
+            r'\b(cooking|sports|music|movie|book|game|travel|food|recipe|restaurant|car|house|home|family|friend|love|relationship)\b(?!.*from|.*table)',
             # Mathematical operations without context
-            r'\b(calculate|math|add|subtract|multiply|divide)\b(?!.*equipment|.*production|.*downtime)',
+            r'\b(calculate|math|add|subtract|multiply|divide|plus|minus|times)\b(?!.*equipment|.*production|.*downtime|.*from|.*table)',
+            # Emotional/psychological content
+            r'\b(sad|happy|depressed|anxious|worried|scared|afraid|lonely|tired|exhausted|stressed)\b',
+            # Random requests
+            r'\b(help me|save me|rescue me|please help|can you help|i need help)\b(?!.*equipment|.*production|.*downtime|.*from|.*table)',
+            # Nonsensical or random phrases
+            r'\b(asdf|qwerty|random|nonsense|gibberish|test|testing|hello world)\b',
         ]
         
         # Check for non-database patterns
         for pattern in non_db_patterns:
             if re.search(pattern, query_lower):
+                logger.info(f"Non-database pattern matched: {pattern} for query: {query}")
                 return False
         
         # List of database-related keywords
@@ -430,22 +462,66 @@ SQL QUERY:"""
             'factory', 'machine', 'log', 'data', 'analysis', 'report', 'performance',
             'efficiency', 'maintenance', 'breakdown', 'alert', 'reason', 'duration',
             'time', 'date', 'count', 'sum', 'average', 'total', 'show', 'list',
-            'find', 'get', 'how many', 'what is', 'which', 'when', 'where'
+            'find', 'get', 'how many', 'what is', 'which', 'when', 'where',
+            'mining', 'shift', 'trip', 'asset', 'site', 'operation', 'oee'
         ]
         
         # Check if query contains database-related keywords
         for keyword in db_keywords:
             if keyword in query_lower:
+                logger.info(f"Database keyword found: {keyword} in query: {query}")
                 return True
         
-        # If query is very short and doesn't contain DB keywords, likely not DB-related
-        if len(query.split()) <= 2 and not any(keyword in query_lower for keyword in db_keywords):
-            return False
+        # Additional checks for obviously non-database queries
+        # Check for very short queries that are likely conversational
+        if len(query.split()) <= 2:
+            # If it's a very short query without any database context, it's likely not database-related
+            db_context_words = ['equipment', 'production', 'downtime', 'status', 'active', 'inactive', 
+                              'factory', 'machine', 'log', 'data', 'analysis', 'report', 'performance',
+                              'efficiency', 'maintenance', 'breakdown', 'alert', 'reason', 'duration',
+                              'mining', 'shift', 'trip', 'asset', 'site', 'operation', 'oee']
+            if not any(word in query_lower for word in db_context_words):
+                logger.info(f"Short query without DB context: {query}")
+                return False
         
-        return True
+        # Check for queries that are clearly conversational or emotional
+        conversational_indicators = ['please', 'thank you', 'thanks', 'sorry', 'excuse me', 'pardon me']
+        if any(indicator in query_lower for indicator in conversational_indicators):
+            # Only consider it database-related if it also contains database keywords
+            if not any(keyword in query_lower for keyword in db_keywords):
+                logger.info(f"Conversational query without DB context: {query}")
+                return False
+        
+        # If we get here, it's likely not a database query
+        logger.info(f"No database context found for query: {query}")
+        return False
     
     async def _generate_nlp_only_response(self, query: str) -> str:
         """Generate a natural language response for non-database queries"""
+        query_lower = query.lower().strip()
+        
+        # Check for inappropriate or concerning content
+        concerning_patterns = [
+            r'\b(kill|die|death|suicide|murder|violence|hate|angry|mad|hurt|harm)\b',
+            r'\b(depressed|sad|lonely|tired|exhausted|stressed|anxious|worried|scared|afraid)\b'
+        ]
+        
+        is_concerning = any(re.search(pattern, query_lower) for pattern in concerning_patterns)
+        
+        if is_concerning:
+            return "I'm CogniMine, your mining operations assistant. I'm here to help with equipment performance, downtime analysis, and production data. If you're experiencing difficulties, please consider reaching out to appropriate support resources. How can I assist you with your mining operations today?"
+        
+        # Check for general greetings
+        greeting_patterns = [
+            r'\b(hello|hi|hey|good morning|good afternoon|good evening|greetings|howdy)\b'
+        ]
+        
+        is_greeting = any(re.search(pattern, query_lower) for pattern in greeting_patterns)
+        
+        if is_greeting:
+            return "Hello! I'm CogniMine, your intelligent mining operations assistant. I can help you analyze equipment performance, downtime patterns, and production data. What would you like to know about your mining operations?"
+        
+        # Default response for other non-database queries
         prompt = f"""You are CogniMine, an intelligent mining operations assistant. The user asked: "{query}"
 
 This query doesn't appear to be related to mining operations, equipment data, or production analysis. 

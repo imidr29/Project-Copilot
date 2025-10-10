@@ -17,6 +17,7 @@ import { ChatHistoryService, ChatSession, ChatMessage } from '../../services/cha
 export class ChatComponent implements OnInit, OnChanges, AfterViewChecked {
   @ViewChild('chatMessages') chatMessages!: ElementRef;
   @Input() currentSession: ChatSession | null = null;
+  @Input() apiToken: string | null = null;
   @Output() sessionUpdated = new EventEmitter<ChatSession>();
 
   messages: ChatMessage[] = [];
@@ -248,7 +249,7 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewChecked {
 
             this.updateLoadingStage('Processing with Gemini 2.0 Flash...', 20);
             
-            const response: QueryResponse = await this.apiService.processQuery(request).toPromise() as QueryResponse;
+            const response: QueryResponse = await this.apiService.processQuery(request, this.apiToken || undefined).toPromise() as QueryResponse;
 
             this.updateLoadingStage('Generating visualization...', 80);
 

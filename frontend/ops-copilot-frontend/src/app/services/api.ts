@@ -36,6 +36,32 @@ export interface HealthResponse {
   langchain: string;
 }
 
+export interface UsageStats {
+  user_id: string;
+  role: string;
+  total_requests: number;
+  daily_requests: number;
+  total_tokens: number;
+  last_reset: string;
+  tokens: Array<{
+    token: string;
+    role: string;
+    created_at: string;
+    expires_at: string;
+    requests: number;
+  }>;
+}
+
+export interface SystemStats {
+  total_users: number;
+  total_requests: number;
+  total_tokens: number;
+  active_tokens: number;
+  daily_requests: number;
+  rate_limit_per_hour: number;
+  token_expiry_hours: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -92,9 +118,18 @@ export class ApiService {
     });
   }
 
-  processQuery(request: QueryRequest): Observable<QueryResponse> {
+  processQuery(request: QueryRequest, token?: string): Observable<QueryResponse> {
     console.log('Sending query request:', request);
-    return this.http.post<QueryResponse>(`${this.baseUrl}/api/query`, request, this.httpOptions)
+    
+    let httpOptions = this.httpOptions;
+    if (token) {
+      httpOptions = {
+        ...this.httpOptions,
+        headers: this.httpOptions.headers.set('Authorization', `Bearer ${token}`)
+      };
+    }
+    
+    return this.http.post<QueryResponse>(`${this.baseUrl}/api/query`, request, httpOptions)
       .pipe(
         retry(2), // Increased retries for LLM operations
         timeout(60000), // Increased timeout for LLM/Pinecone operations
@@ -159,5 +194,62 @@ export class ApiService {
         ]);
       })
     );
+  }
+
+  // Token usage statistics methods
+  getUsageStats(token: string): Observable<UsageStats> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get<UsageStats>(`${this.baseUrl}/api/usage/stats`, { headers })
+      .pipe(
+        retry(1),
+        catchError(this.handleError.bind(this))
+      );
+  }
+
+  getSystemStats(token: string): Observable<SystemStats> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get<SystemStats>(`${this.baseUrl}/api/usage/system`, { headers })
+      .pipe(
+        retry(1),
+        catchError(this.handleError.bind(this))
+      );
+  }
+
+  getAllUsageStats(token: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get<any>(`${this.baseUrl}/api/usage/all`, { headers })
+      .pipe(
+        retry(1),
+        catchError(this.handleError.bind(this))
+      );
+  }
+
+  resetDailyCounters(token: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.post<any>(`${this.baseUrl}/api/usage/reset-daily`, {}, { headers })
+      .pipe(
+        retry(1),
+        catchError(this.handleError.bind(this))
+      );
   }
 }
